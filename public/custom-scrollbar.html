@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+ .scroll-area {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.content {
+  display: flex;
+  gap: 20px;
+  width: max-content;
+}
+
+.box {
+  min-width: 250px;
+  padding: 40px;
+  background: #ddd;
+  border-radius: 10px;
+}
+
+.custom-scrollbar {
+  width: 100%;
+  height: 8px;
+  background: #ccc;
+  border-radius: 10px;
+  margin-top: 15px;
+  position: relative;
+}
+
+.thumb {
+  width: 80px;
+  height: 100%;
+  background: #333;
+  border-radius: 10px;
+  cursor: pointer;
+  position: absolute;
+  left: 0;
+}
+
+</style>
+<body>
+<div class="scroll-area">
+  <div class="content">
+    <!-- wide content -->
+    <div class="box">Box 1</div>
+    <div class="box">Box 2</div>
+    <div class="box">Box 3</div>
+    <div class="box">Box 4</div>
+    <div class="box">Box 5</div>
+  </div>
+</div>
+
+<div class="custom-scrollbar">
+  <div class="thumb"></div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script>
+   $(function () {
+
+  const $area = $(".scroll-area");
+  const $content = $(".content");
+  const $thumb = $(".thumb");
+  const $bar = $(".custom-scrollbar");
+
+  let dragging = false;
+  let startX = 0;
+  let startLeft = 0;
+
+  const updateThumbSize = () => {
+    const ratio = $area.width() / $content.width();
+    const thumbWidth = Math.max(40, $bar.width() * ratio); // min width
+    $thumb.width(thumbWidth);
+  };
+
+  updateThumbSize();
+  $(window).on("resize", updateThumbSize);
+
+  // Drag thumb only
+  $thumb.on("mousedown", function (e) {
+    dragging = true;
+    startX = e.pageX;
+    startLeft = parseInt($thumb.css("left"));
+  });
+
+  $(document).on("mousemove", function (e) {
+    if (!dragging) return;
+
+    const dx = e.pageX - startX;
+    let newLeft = startLeft + dx;
+
+    const maxLeft = $bar.width() - $thumb.width();
+    newLeft = Math.max(0, Math.min(maxLeft, newLeft));
+
+    $thumb.css("left", newLeft);
+
+    // Move content according to thumb position
+    const scrollRatio = newLeft / maxLeft;
+    const maxContentScroll = $content.width() - $area.width();
+    $area.scrollLeft(scrollRatio * maxContentScroll);
+  });
+
+  $(document).on("mouseup", function () {
+    dragging = false;
+  });
+});
+
+
+</script>
+</body>
+</html>
