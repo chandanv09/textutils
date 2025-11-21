@@ -6,10 +6,16 @@
     <title>Document</title>
 </head>
 <style>
- .scroll-area {
+.scroll-area {
   width: 100%;
-  overflow: hidden;
+  overflow-x: scroll; /* allow native mobile scroll */
+  overflow-y: hidden;
   position: relative;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;     /* Firefox hide */
+}
+.scroll-area::-webkit-scrollbar {
+  display: none;             /* Chrome hide */
 }
 
 .content {
@@ -29,26 +35,27 @@
   width: 100%;
   height: 8px;
   background: #ccc;
-  border-radius: 10px;
-  margin-top: 15px;
+  border-radius: 8px;
+  margin-top: 12px;
   position: relative;
 }
 
 .thumb {
-  width: 80px;
   height: 100%;
+  width: 60px;
   background: #333;
-  border-radius: 10px;
-  cursor: pointer;
+  border-radius: 8px;
   position: absolute;
   left: 0;
+  cursor: pointer;
 }
+
+
 
 </style>
 <body>
 <div class="scroll-area">
   <div class="content">
-    <!-- wide content -->
     <div class="box">Box 1</div>
     <div class="box">Box 2</div>
     <div class="box">Box 3</div>
@@ -61,54 +68,69 @@
   <div class="thumb"></div>
 </div>
 
+
+
+
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script>
-   $(function () {
-
+$(function () {
   const $area = $(".scroll-area");
   const $content = $(".content");
-  const $thumb = $(".thumb");
   const $bar = $(".custom-scrollbar");
+  const $thumb = $(".thumb");
 
   let dragging = false;
   let startX = 0;
   let startLeft = 0;
 
-  const updateThumbSize = () => {
+  // Resize thumb based on content width
+  function updateThumbSize() {
     const ratio = $area.width() / $content.width();
-    const thumbWidth = Math.max(40, $bar.width() * ratio); // min width
+    const thumbWidth = Math.max(40, $bar.width() * ratio);
     $thumb.width(thumbWidth);
-  };
+  }
 
   updateThumbSize();
   $(window).on("resize", updateThumbSize);
 
-  // Drag thumb only
-  $thumb.on("mousedown", function (e) {
+  // ========== THUMB DRAG (desktop + mobile) ==========
+  $thumb.on("mousedown touchstart", function (e) {
     dragging = true;
-    startX = e.pageX;
-    startLeft = parseInt($thumb.css("left"));
+
+    const pageX = e.pageX || e.originalEvent.touches[0].pageX;
+    startX = pageX;
+    startLeft = parseFloat($thumb.css("left"));
   });
 
-  $(document).on("mousemove", function (e) {
+  $(document).on("mousemove touchmove", function (e) {
     if (!dragging) return;
 
-    const dx = e.pageX - startX;
+    const pageX = e.pageX || e.originalEvent.touches[0].pageX;
+    const dx = pageX - startX;
+
     let newLeft = startLeft + dx;
-
     const maxLeft = $bar.width() - $thumb.width();
-    newLeft = Math.max(0, Math.min(maxLeft, newLeft));
 
+    newLeft = Math.max(0, Math.min(maxLeft, newLeft));
     $thumb.css("left", newLeft);
 
-    // Move content according to thumb position
     const scrollRatio = newLeft / maxLeft;
-    const maxContentScroll = $content.width() - $area.width();
-    $area.scrollLeft(scrollRatio * maxContentScroll);
+    const contentMax = $content.width() - $area.width();
+  
+    $area.scrollLeft(scrollRatio * contentMax);
   });
 
-  $(document).on("mouseup", function () {
+  $(document).on("mouseup touchend", function () {
     dragging = false;
+  });
+
+  // ========== MOBILE CONTENT SCROLL → UPDATE THUMB ==========
+  $area.on("scroll", function () {
+    const maxScroll = $content.width() - $area.width();
+    const scrollRatio = $area.scrollLeft() / maxScroll;
+
+    const maxLeft = $bar.width() - $thumb.width();
+    $thumb.css("left", scrollRatio * maxLeft);
   });
 });
 
