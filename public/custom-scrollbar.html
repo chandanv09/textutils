@@ -71,7 +71,7 @@
 
 
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"  crossorigin="anonymous"></script>
 <script>
 $(function () {
   const $area = $(".scroll-area");
@@ -104,6 +104,7 @@ $(function () {
 
   $(document).on("mousemove touchmove", function (e) {
     if (!dragging) return;
+     e.preventDefault();
 
     const pageX = e.pageX || e.originalEvent.touches[0].pageX;
     const dx = pageX - startX;
